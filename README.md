@@ -1,20 +1,20 @@
 # cpp-pipeline-lab
 
-Daily C++ study toward Unreal Engine pipeline tools. Each week's build is written in Python first, then
-ported to C++ by hand, with a note on every decision C++ forced (types, ownership, copies, failure, cost).
-
-Build theme: a catalog of motion capture takes (shoots, performers, files), growing into a small asset
-pipeline and, later, Unreal editor tools.
+Fast-track C++ study for pipeline / mocap / Unreal tools roles. C++ only; lessons are taught in a chat with
+Claude and each one builds a real piece of a motion capture pipeline. See **[COURSE.md](COURSE.md)**.
 
 ## Layout
-- `weekNN/python/` — the Python version of that week's build
-- `weekNN/cpp/` — the C++ port
-- `weekNN/NOTES.md` — forced decisions and what the Python runtime was doing for me
-- `interview/` — daily interview reps and Friday mocks, with reviews
-- `STUDY-GUIDE.md` — core principles in my own words
+- `lessons/NN-name/main.cpp` — the exercise (compiles from the start, tests built in, you fill the `TODO`s)
+- `lessons/NN-name/NOTES.md` — reference card: Python → C++ mapping, traps, interview questions
+- `common/check.hpp` — the tiny `CHECK()` test helper every lesson uses
+- `interview/` — interview reps and mocks
+- `STUDY-GUIDE.md` — principles in my own words
+- `archive/` — the earlier Python-first attempt (kept for reference)
 
-## Build (Windows, VS 2022, C++20)
+## Build + run a lesson (Windows, VS 2026, MSVC, C++20)
+From the repo root in any PowerShell:
 ```
-cmake -S . -B build
-cmake --build build
+.\tools\run.ps1 01
 ```
+It loads the MSVC environment itself, configures with the `debug` preset (Ninja), builds `lesson01`, runs it.
+`-Release` builds optimized. Visual Studio / Rider: File > Open > Folder, pick the `debug` preset.
