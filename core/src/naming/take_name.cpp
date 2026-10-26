@@ -1,5 +1,5 @@
-// Capture++ — take file naming (definitions). Declarations and rules: capture/naming/take_name.hpp
-#include "capture/naming/take_name.hpp"
+// Capture++ — take file naming (definitions). Declarations and rules: capture/naming/take_name.h
+#include "capture/naming/take_name.h"
 
 #include <charconv>  // std::from_chars
 

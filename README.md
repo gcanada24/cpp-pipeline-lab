@@ -8,7 +8,7 @@ lesson in chat with Claude. Course map: **[COURSE.md](COURSE.md)**.
 - `core/` — `capture_core` static library (no Qt). Headers in `core/include/capture/`, code in `core/src/`
 - `apps/` — executables on top of core (CLI, Qt browser), added as the course reaches them
 - `lessons/NN-name/` — `main.cpp` (that lesson's tests) + `NOTES.md` (reference card, interview questions)
-- `common/check.hpp` — the tiny `CHECK()` test helper
+- `common/check.h` — the tiny `CHECK()` test helper
 - `interview/` — interview reps and mocks
 - `STUDY-GUIDE.md` — principles in my own words
 - `archive/` — the earlier Python-first attempt

@@ -1,10 +1,10 @@
 // Lesson 01 tests — take file naming.
-// You edit:  core/include/capture/naming/take_name.hpp   and   core/src/naming/take_name.cpp
+// You edit:  core/include/capture/naming/take_name.h   and   core/src/naming/take_name.cpp
 // Run:       .\tools\run.ps1 01
 // Don't edit this file, except uncommenting the TODO(3) block.
-#include <capture/naming/take_name.hpp>
+#include <capture/naming/take_name.h>
 
-#include "check.hpp"
+#include "check.h"
 
 using namespace capture::naming;
 

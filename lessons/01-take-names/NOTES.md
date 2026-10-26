@@ -7,7 +7,7 @@ Python ancestor: the naming / path-generation helpers in `core/utilities` (shot 
 ## Where the code goes
 | File | Role | Python analogy |
 |---|---|---|
-| `core/include/capture/naming/take_name.hpp` | **declarations**: the struct and function signatures | the "interface" of a module |
+| `core/include/capture/naming/take_name.h` | **declarations**: the struct and function signatures | the "interface" of a module |
 | `core/src/naming/take_name.cpp` | **definitions**: function bodies | the module's code |
 | `lessons/01-take-names/main.cpp` | tests, links against `capture_core` | `unit_test/...UnitTest.py` |
 
@@ -17,6 +17,8 @@ Python ancestor: the naming / path-generation helpers in `core/utilities` (shot 
 .cpp and the compile still succeeds — the **link** fails with `unresolved external symbol`. Python has no
 link step; this is the error class you'll see most in Unreal.
 
+- `.h` vs `.hpp` — pure convention; `#include` pastes text whatever the extension. `.hpp` signals "C++ only";
+  Unreal, Qt and this repo use `.h`.
 - `#pragma once` — include this header at most once per .cpp (stops duplicate-definition errors).
 - `namespace capture::naming { }` — like a Python package path; call as `capture::naming::parse_take_name`.
 - A default argument or a doc comment goes in the **header**; the .cpp just repeats the signature.
