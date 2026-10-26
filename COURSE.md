@@ -1,60 +1,77 @@
-# C++ for Pipeline & Mocap — Fast Track
+# Capture++ — learning C++ by rebuilding a capture pipeline
 
-C++ only, taught in chat. Every lesson is a real piece of a mocap / animation pipeline, and every lesson
-ends with the interview questions that concept gets asked as. You already know how to program (Python, 6+
-years of pipeline work), so lessons spend no time on "what is a loop": they spend it on what C++ makes you
-decide that Python decided for you — **types, memory, ownership, copies, failure, cost.**
+C++ only, taught in chat. Over 17 lessons you build **Capture++**: a C++ re-design of the Python capture
+system you shipped (entity data model → database → events/threads → Qt browser). It is not a line-by-line
+port: every lesson takes one idea from the Python system, names the design principle behind it, and makes
+the decisions C++ forces — **types, ownership, copies, failure, cost, threads.**
+
+The Python source is a **local reference only** (`Downloads\My Work-...\python\capture\core`). It is never
+copied into this repo; Capture++ is original code with generic names.
+
+## Architecture (where it ends up)
+```
+capture_core (static lib, no Qt)            apps/
+  naming/     take filename parse/format      capture_cli/  ingest + query from the command line
+  model/      Entity base, Facility→Take      capture_ui/   Qt 6 browser: tree, table, edit, undo
+  events/     Signal<Args...>
+  serialize/  JSON, Type@uuid references
+  db/         IDatabaseProvider, JSON + SQLite providers
+  process/    background saver, task processor
+  services/   selection, repository, processing (replaces the engine inheritance chain)
+```
+Rule carried over from the Python design: **core never includes Qt**; views talk to core through services
+and signals.
 
 ## How a session works
-1. In chat I explain the lesson's concepts, mapped from the Python you already know.
-2. You open `lessons/NN-*/main.cpp`. It compiles from the start and has tests built in; your job is the `TODO`s.
-3. Build + run: `.\tools\run.ps1 NN` (any PowerShell, from the repo root). It prints `FAIL` lines and a score.
-4. Say "check" in chat — I build it, read your code, and review it like an interviewer would.
-5. Close with 3–5 rapid interview questions. Misses get logged and come back in the next session's warm-up.
+1. In chat I explain the concepts, mapped from the Python you already wrote.
+2. You write the code in `core/...` (headers in `core/include/capture/`, bodies in `core/src/`). Each lesson's
+   tests live in `lessons/NN-*/main.cpp` and compile from the start.
+3. `.\tools\run.ps1 NN` builds `capture_core` and the lesson's tests and runs them (FAIL lines + a score).
+4. Say "check": I build it, read your code and review it like an interviewer.
+5. Close with rapid interview questions; misses come back in the next session's warm-up.
 
-You write the solutions; I give hints in three levels (question → pointer → example on a different problem).
-Ask for a worked example any time speed matters more than struggle.
+You write the solutions. Hints come in three levels (question → pointer → example on a different problem);
+ask for a worked example whenever speed matters more than struggle.
 
-## The build: `takecheck`
-Lessons stack into one tool you can show in an interview: point it at a folder of capture data and it
-catalogs the takes, loads marker trajectories, flags occlusion gaps, fills them, solves a skeleton pose,
-and exports BVH — batch-processed across threads.
+## Lessons
 
-## Map
-
-### Part A — Core language (the interview floor)
-| # | Lesson | Mocap / pipeline task | C++ concepts |
+### Phase 1 — C++ through the data model (no frameworks)
+| # | Capture++ piece | From the Python system | C++ concepts |
 |---|---|---|---|
-| 01 | Take parser | `BRAWL_DAY2_T003_JDoe.fbx` → `TakeRecord` | compile/link, `struct`, `std::string` vs `std::string_view`, `std::optional`, `from_chars`, `operator==` |
-| 02 | Vec3 & markers | marker positions, distances, centroid of a rigid body | value types, references, `const`, pass-by-value vs `const&`, operator overloading, `constexpr` |
-| 03 | Trajectories | per-frame marker data, detect occlusion gaps, linear gap fill | `std::vector`, `reserve`, iterators, range-for, `<algorithm>`, NaN handling, iterator invalidation |
-| 04 | Take catalog | group takes by shoot/performer, latest take per performer | `std::map` vs `std::unordered_map`, hashing a custom key, `std::sort` with lambdas |
-| 05 | Marker CSV reader | load an OptiTrack/Vicon-style CSV export | `std::ifstream`, RAII, `std::filesystem`, exceptions vs `optional` vs error codes |
+| 01 | `naming`: parse/format take filenames | naming / path helpers | header vs source, compile vs link, namespaces, `string_view`, `optional`, `from_chars`, `std::format`, `operator==` |
+| 02 | `Uuid`, `CircleStatus`, `Timecode` | `uuid4().int`, `CircleStatus(Enum)`, timecode strings, frames @120/60/30 | value types, `enum class`, operator overloading, `const`, `constexpr`, `<random>`, `std::hash` |
+| 03 | `Entity` base class | `EntityBase`: uuid, name, note, `safely_deleted`, `_modified_properties` | `class` vs `struct`, access control, abstract classes, virtual destructor, getters/setters, change tracking |
+| 04 | Facility → Project → Day → Session → Shot → Take | `add_take()`, `parent_entity`, `get_parent_of_type()` | ownership: `unique_ptr` children + raw non-owning parent, shared Subjects, templates + `dynamic_cast` |
+| 05 | Traversal, lookup, sorting | `children_entity_bases`, `get_child_with_uuid`, `SortTypes` | recursion/visitors, `unordered_map` index, `std::sort` + lambdas, iterators |
+| 06 | Entities vs values | (Python never made you choose) | copy vs move, Rule of 0/3/5, `= delete`, identity vs value objects |
 
-### Part B — Memory & design (where pipeline interviews are won)
-| # | Lesson | Mocap / pipeline task | C++ concepts |
+### Phase 2 — Making it a system
+| # | Capture++ piece | From the Python system | C++ concepts |
 |---|---|---|---|
-| 06 | Skeleton hierarchy | joints with parents/children, find root, walk the chain | pointers vs references, `std::unique_ptr`, raw non-owning pointers, index-based hierarchies |
-| 07 | Owning a big buffer | a `Clip` holding a million frames — copy vs move | stack vs heap, Rule of 0/3/5, copy/move constructors, `std::move`, RVO |
-| 08 | Forward kinematics | local rotations → world joint positions | quaternions, 4×4 transforms, composing transforms down a hierarchy, float precision |
-| 09 | Generic filters | smoothing any channel (float, Vec3, Quat) | templates, function templates, lambdas & captures, `std::function`, concepts (light) |
-| 10 | Exporter plugins | BVH / CSV writers behind one interface | classes, `virtual`, `override`, pure virtual, virtual destructor, factories, vtable cost |
+| 07 | `Signal<Args...>` | `EventBase.register/dispatch`, `inspect.signature` checks | variadic templates, `std::function`, lambdas & captures, connection lifetime — compile-time checked |
+| 08 | JSON serialization | `_entity_to_dict_formation`, `Type@uuid`, `replace_source_object_serializations...` | vcpkg + nlohmann/json, two-pass reconstruction, factory registry (no reflection in C++) |
+| 09 | `IDatabaseProvider` + JSON-file provider | `DatabaseProvider`, `DatabaseFactory`, safe delete | pure virtual interfaces, factories returning `unique_ptr`, exception hierarchy |
+| 10 | SQLite provider | Shotgun provider (simplified) | wrapping a C API with RAII, `unique_ptr` custom deleters, prepared statements, transactions, save only dirty entities |
+| 11 | Background saver + task processor | `ThreadRunnerBase` pushers, `ProcessorBase` + status events | `std::jthread`, `stop_token`, `mutex`, `condition_variable`, work queues, why `RLock` is a smell |
+| 12 | Services instead of the engine chain | `TakeEngine(ShotEngine(SessionEngine(...)))` — 12 levels | composition over inheritance, dependency injection, interfaces for testing, library/app split, `capture_cli` |
 
-### Part C — Performance & scale
-| # | Lesson | Mocap / pipeline task | C++ concepts |
+### Phase 3 — Qt 6 (needs Qt installed by here)
+| # | Capture++ piece | From the Python system | C++ concepts |
 |---|---|---|---|
-| 11 | Fast frames | process 10M samples, measure it | cache & memory layout, AoS vs SoA, Debug vs Release, `<chrono>` timing, profiler basics |
-| 12 | Batch the farm | process a folder of takes in parallel | `std::thread`, `std::async`, `std::mutex`, data races, thread pool idea, `std::atomic` |
+| 13 | Main window shell | `windowBase`, `mainBase` | `find_package(Qt6)`, `QMainWindow`, layouts, signals/slots, moc / `Q_OBJECT`, Qt parent-child ownership |
+| 14 | Hierarchy tree + take table | `EntityViewWidget` (`QStandardItemModel`) | `QAbstractItemModel` / `QAbstractTableModel`: `index`, `parent`, `rowCount`, `data`, roles, `dataChanged` |
+| 15 | Edit form, circle takes, undo/redo | `entityEditWidget` | delegates, binding core `Signal`s to Qt, `QUndoStack` (Command pattern) |
+| 16 | Responsive UI | threaded pushers + UI callbacks | `QThread` / `QtConcurrent`, `QFutureWatcher`, queued connections, never touching widgets off the GUI thread |
 
-### Part D — Unreal & capstone
-| # | Lesson | Mocap / pipeline task | C++ concepts |
-|---|---|---|---|
-| 13 | Unreal C++ dialect | read/write the same take data the Unreal way | `UCLASS`/`UPROPERTY`/`UFUNCTION`, `TArray`/`TMap`/`FString`, UObject GC vs smart pointers, modules, editor utilities & commandlets |
-| 14 | Capstone: `takecheck` | the full CLI, tests, README for GitHub | putting it together, code review, talking through design trade-offs |
+### Phase 4 — Capstone & interviews
+| # | Capture++ piece | |
+|---|---|---|
+| 17 | **Capture++ Browser**: open a DB, browse the hierarchy, scan a folder and ingest takes (Lesson 01), circle takes, save | README + screenshots for GitHub; mock system-design interview ("design a capture data catalog"); C++ knowledge mock |
 
-### Interview track (runs through everything)
-Each lesson ends with its questions. Every ~4 lessons: a 30-minute mock (whiteboard-style problem + C++
-knowledge questions + "walk me through a pipeline tool you built"). Running list in `interview/`.
+**Optional:** live stream receiver (`CaptureStream`/`CaptureTransform`: binary packets, frame buffers,
+performance); Unreal C++ dialect (`UCLASS`, `TArray`, UObject GC vs smart pointers).
 
-## Pace
-Built for speed: one lesson is a 60–120 minute session. Two lessons a day finishes Part A–B in about a week.
+## Setup milestones
+- Now: VS 2026 (MSVC), CMake, Ninja — already working via `tools\run.ps1`.
+- Lesson 08: vcpkg (bundled with VS) pulls nlohmann-json and sqlite3 through a `vcpkg.json` manifest.
+- Lesson 13: Qt 6.8 LTS, "MSVC 2022 64-bit" component, from the Qt online installer (free Qt account).

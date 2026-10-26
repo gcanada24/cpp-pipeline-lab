@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(cpp_pipeline_lab LANGUAGES CXX)
+project(capture_plus_plus LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,8 +10,15 @@ else()
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# Every folder lessons/NN-name/ with a main.cpp becomes target lessonNN.
-# All .cpp files in that folder are compiled into it; common/ is on the include path.
+# capture_core: the Qt-free library every lesson adds to (models, events, serialization, database).
+add_subdirectory(core)
+
+# Apps (CLI, Qt browser) are added here as the course reaches them.
+# add_subdirectory(apps/capture_cli)
+# add_subdirectory(apps/capture_ui)
+
+# Every folder lessons/NN-name/ with a main.cpp becomes target lessonNN: that lesson's tests,
+# linked against capture_core, with common/ (the CHECK helper) on the include path.
 file(GLOB LESSON_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/lessons/*")
 foreach(dir ${LESSON_DIRS})
   if(EXISTS "${dir}/main.cpp")
@@ -20,5 +27,6 @@ foreach(dir ${LESSON_DIRS})
     file(GLOB srcs CONFIGURE_DEPENDS "${dir}/*.cpp")
     add_executable(lesson${num} ${srcs})
     target_include_directories(lesson${num} PRIVATE "${CMAKE_SOURCE_DIR}/common")
+    target_link_libraries(lesson${num} PRIVATE capture_core)
   endif()
 endforeach()
