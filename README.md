@@ -2,12 +2,14 @@
 
 Learning C++ for pipeline / mocap / Unreal tools roles by building **Capture++**: a C++ capture-data
 pipeline (entity data model, database providers, events, threads, and a Qt 6 browser), taught lesson by
-lesson in chat with Claude. Course map: **[COURSE.md](COURSE.md)**.
+lesson with Claude.
+
+**New here or picking back up? Open [START-HERE.md](START-HERE.md).**
 
 ## Layout
 - `core/` — `capture_core` static library (no Qt). Headers in `core/include/capture/`, code in `core/src/`
 - `apps/` — executables on top of core (CLI, Qt browser), added as the course reaches them
-- `lessons/NN-name/` — `main.cpp` (that lesson's tests) + `NOTES.md` (reference card, interview questions)
+- `lessons/NN-name/` — `LESSON.md` (the lesson: steps, explanations, examples) + `main.cpp` (its tests)
 - `common/check.h` — the tiny `CHECK()` test helper
 - `interview/` — interview reps and mocks
 - `STUDY-GUIDE.md` — principles in my own words

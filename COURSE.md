@@ -22,16 +22,14 @@ capture_core (static lib, no Qt)            apps/
 Rule carried over from the Python design: **core never includes Qt**; views talk to core through services
 and signals.
 
-## How a session works
-1. In chat I explain the concepts, mapped from the Python you already wrote.
-2. You write the code in `core/...` (headers in `core/include/capture/`, bodies in `core/src/`). Each lesson's
-   tests live in `lessons/NN-*/main.cpp` and compile from the start.
-3. `.\tools\run.ps1 NN` builds `capture_core` and the lesson's tests and runs them (FAIL lines + a score).
-4. Say "check": I build it, read your code and review it like an interviewer.
-5. Close with rapid interview questions; misses come back in the next session's warm-up.
+## How a lesson works
+Every lesson is a folder `lessons/NN-name/` whose **`LESSON.md` is the complete lesson**: short steps, each
+with Learn (the idea next to the Python version) → Example (working code for a similar problem) → Your turn
+(one function, one file) → Run it (`.	oolsun.ps1 NN` shows progress per step). Hints are hidden in the
+lesson; chat is for "check" (code review), extra explanations and interview quizzes. See
+[START-HERE.md](START-HERE.md).
 
-You write the solutions. Hints come in three levels (question → pointer → example on a different problem);
-ask for a worked example whenever speed matters more than struggle.
+Each lesson is written in full before you start it. The tables below are the plan for the whole course.
 
 ## Lessons
 

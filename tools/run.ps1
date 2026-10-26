@@ -20,9 +20,12 @@ if (-not (Get-Command cl -ErrorAction SilentlyContinue)) {
 Push-Location $root
 try {
     cmake --preset $preset --log-level=WARNING | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed' }
+    if ($LASTEXITCODE -ne 0) { Write-Host "`nCMake configure failed (see above)." -ForegroundColor Red; exit 1 }
     cmake --build --preset $preset --target "lesson$Lesson"
-    if ($LASTEXITCODE -ne 0) { throw 'Build failed (compiler errors above)' }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "`nBuild failed. Read the first 'error' line above: C#### = compile error, LNK#### = link error." -ForegroundColor Red
+        exit 1
+    }
     Write-Host ''
     & "$root\build\$preset\lesson$Lesson.exe"
     exit $LASTEXITCODE
