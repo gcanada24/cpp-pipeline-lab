@@ -21,6 +21,28 @@ Progress
   [ ] Step 4: parse_take_number            8/11
 ```
 
+## Running a lesson from your IDE (Run button)
+`.\tools\run.ps1 NN` works anywhere, but you can use a Run button instead. The repo is a CMake project, and
+each lesson is a run target named `lessonNN`.
+
+**Visual Studio 2026**
+1. File > Open > Folder… > pick `cpp-pipeline-lab`. Wait for "CMake generation finished" in the Output pane.
+2. Toolbar, configuration dropdown: **x64 Debug (MSVC + Ninja)**.
+3. Toolbar, "Select Startup Item" dropdown (next to the green ▶): **lesson01.exe**.
+4. **Ctrl+F5** runs it, and the console stays open so you can read the progress list.
+   **F5** runs it in the debugger: click left of a line number in `take_name.cpp` to set a breakpoint, then
+   step through your code with F10 and inspect variables by hovering over them.
+
+**Rider**
+1. File > Open > pick the `cpp-pipeline-lab` folder (open it as a CMake project).
+2. Rider reads `CMakePresets.json` and makes a **debug** profile. If it asks for a toolchain, choose
+   **Visual Studio**.
+3. In the run configuration dropdown (top right), pick **lesson01**, then click ▶ (Run) or the bug icon (Debug).
+
+Why not "run this file" like PyCharm? A C++ program has to be compiled and linked from several files: the
+lesson's tests plus your `capture_core` code. So you run the *target* (`lesson01`), and the Run button builds
+whatever changed first.
+
 ## Where Claude fits
 The lesson file is complete on its own. Use chat when you want more:
 - **"check"** — I build your code and review it the way an interviewer would

@@ -46,11 +46,11 @@ The files you'll have open:
 
 ## Step 0 — Run it once (5 min)
 
-1. Open a PowerShell window in the repo folder (`Documents\Claude Files\cpp-pipeline-lab`).
-2. Run:
-   ```
-   .\tools\run.ps1 01
-   ```
+1. Run the lesson, either way:
+   - **IDE:** open the repo folder in Visual Studio or Rider, pick **lesson01** as the startup item / run
+     configuration, and press Run (Visual Studio: **Ctrl+F5**). Setup details: [START-HERE.md](../../START-HERE.md).
+   - **PowerShell:** in the repo folder (`Documents\Claude Files\cpp-pipeline-lab`), run `.\tools\run.ps1 01`.
+2. Whenever a step says "Run it", either way works.
 3. You'll see some build lines, then a progress list like this:
    ```
    Progress
@@ -64,7 +64,7 @@ The files you'll have open:
    Some checks already "pass" because the empty starter functions return `false` or nothing, and some tests
    *expect* `false`. Ignore those numbers; work on one step at a time and watch it go to `[x]`.
 
-**Done when:** you can run the command and see the progress list.
+**Done when:** you can run lesson01 and see the progress list.
 
 ---
 
