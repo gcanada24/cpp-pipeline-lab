@@ -6,6 +6,11 @@
 #include <charconv>  // std::from_chars             (step 4)
 
 namespace capture::naming {
+namespace {  // private to this file: constants and helper functions
+
+// STEP 2: your take-extension constant list and to_lower_copy helper go here
+
+}  // namespace
 
 // STEP 2 ------------------------------------------------------------------------------------------
 bool is_take_extension(std::string_view ext) {

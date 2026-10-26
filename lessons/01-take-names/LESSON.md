@@ -1,6 +1,6 @@
 # Lesson 01 — Take names
 
-**Time:** about 2–3 hours, in 8 short steps. Stop after any step; your progress is saved in the code.
+**Time:** about 3 hours, in 8 short steps. Stop after any step; your progress is saved in the code.
 
 ## What you'll build
 The first piece of Capture++: code that reads a capture file's name and pulls out its parts.
@@ -113,18 +113,19 @@ error.
 
 ---
 
-## Step 2 — Looking at text without copying it: `std::string_view` (20 min)
+## Step 2 — Text, constants and helpers: `is_take_extension` (30 min)
 
-### Learn
-C++ has two common ways to hold text:
+This step has four small ideas, then one function that uses all of them.
 
+### Learn 1: two ways to hold text
 | Type | What it is | Python comparison |
 |---|---|---|
 | `std::string` | **owns** its characters. It has its own copy in memory and frees it when done. | a `str` |
 | `std::string_view` | **looks at** characters someone else owns. Just a pointer to the first character and a length. Making one costs nothing. | (no equivalent: Python always makes a new `str` when you slice) |
 
 Why it matters: our functions only *read* a filename. Copying it would waste time and memory, which adds up
-when you scan 50,000 files. So the inputs are `std::string_view`.
+when you scan 50,000 files. So the inputs are `std::string_view`. When we need to *build* new text (like a
+lower-case copy), we use a `std::string`, because new text needs an owner.
 
 Things you can do with a `std::string_view sv`:
 ```cpp
@@ -134,55 +135,123 @@ sv[0]              // first character, a char            (Python: s[0])
 for (char c : sv)  // loop over every character          (Python: for c in s)
 sv == ".fbx"       // compare with text
 ```
-
 A `char` is a single character, written with **single** quotes: `'.'`. Double quotes `".fbx"` are text.
 
-To lower-case one character, use `std::tolower` from `<cctype>`. It has an old C quirk: you must cast the
-`char` to `unsigned char` first, or characters like `é` can crash it:
+### Learn 2: lower-casing a character
+`std::tolower` (from `<cctype>`) lower-cases one character. It has an old C quirk: you must convert the
+`char` to `unsigned char` first, or characters like `é` can crash it. Written out one conversion at a time:
 ```cpp
-char lower = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+unsigned char as_unsigned = static_cast<unsigned char>(c);   // 1. make it safe for tolower
+int lowered = std::tolower(as_unsigned);                      // 2. tolower returns an int (C heritage)
+char result = static_cast<char>(lowered);                     // 3. back to a char
 ```
-`static_cast<T>(x)` means "convert x to type T"; it's C++'s explicit, searchable way to write a type
-conversion (Python: `int(x)`, `str(x)`).
+`static_cast<T>(x)` means "convert x to type T". It's C++'s explicit way to write a conversion
+(Python: `int(x)`, `str(x)`), and it's easy to search for.
 
-### Example
-A different problem with the same tools: is the user's answer "y" or "yes", in any case?
+### Learn 3: constants
+Your Python habit, `VALID_EXT = [".fbx", ".c3d"]`, is the right design: the rule lives in one place, and
+adding a format is a one-line change. The standard C++ way to write a fixed list of constants:
 ```cpp
-#include <cctype>
-#include <string>
+#include <array>
 #include <string_view>
 
-bool is_yes(std::string_view answer) {
-    if (answer.size() != 1 && answer.size() != 3) {
-        return false;                       // can't be "y" or "yes"
-    }
-    std::string lower;                      // a small owned copy we're allowed to change
-    for (char c : answer) {
-        lower += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    return lower == "y" || lower == "yes";
-}
-// is_yes("YES") -> true    is_yes("Yeah") -> false    is_yes("") -> false
+using namespace std::string_view_literals;   // lets us write "text"sv
+
+constexpr std::array kValidUnits{"cm"sv, "m"sv, "mm"sv};
 ```
-Notice that `answer` is a `string_view` (we only read it), but `lower` is a `std::string`, because we build
-new text and need to own it.
+- **`constexpr`**: the value is fixed when the program is compiled and can never change. In Python, ALL_CAPS
+  is just a naming convention; here the compiler enforces it.
+- **`std::array`**: a fixed-size list stored directly in the program, with no memory allocated at run time.
+  (`std::vector` is the list that can grow while the program runs. A constant list never grows.)
+- **No size written**: the compiler counts the items. Add a fourth unit and the size becomes 4 automatically.
+- **`"cm"sv`**: the `sv` suffix makes each item a `std::string_view`, so comparing items with `==` compares
+  the text. (Without it, the items would be old C-style strings, where `==` compares memory addresses.)
+- **`k` prefix**: a common C++ naming style for constants (Google, Unreal). `VALID_UNITS` is fine too; pick
+  one and stay consistent.
+
+### Learn 4: private helpers and the unnamed namespace
+Standard practice is to break work into small, named functions, each doing one thing. A helper that only
+this `.cpp` file uses goes inside an **unnamed namespace**, which makes it invisible to every other file.
+It's the C++ version of a Python module-level `_private` name, except actually private:
+```cpp
+namespace capture::naming {
+namespace {   // unnamed namespace: everything in here is private to this .cpp file
+
+constexpr std::array kSomething{...};
+
+std::string some_helper(std::string_view text) { ... }
+
+}  // namespace
+
+// public functions (declared in the header) go below and can use the helpers
+}  // namespace capture::naming
+```
+A good rule: if code outside this file needs it (for example, the Qt app's file browser wanting the list of
+extensions), it goes in the header. If not, it stays private here.
+
+### Example
+Two small pieces you'll recognise in your own function. First, a helper that returns a lower-case copy:
+```cpp
+// Returns a lower-case copy of text. "BrAwL" -> "brawl"
+std::string to_lower_copy(std::string_view text) {
+    std::string result;
+    result.reserve(text.size());              // optional: allocate the space once, up front
+
+    for (char c : text) {
+        unsigned char as_unsigned = static_cast<unsigned char>(c);
+        int lowered = std::tolower(as_unsigned);
+        result.push_back(static_cast<char>(lowered));
+    }
+
+    return result;
+}
+```
+Second, searching a constant list with a plain loop. Different list, same pattern you'll need:
+```cpp
+constexpr std::array kStandardFrameRates{24, 30, 60, 120};
+
+bool is_standard_frame_rate(int fps) {
+    for (int rate : kStandardFrameRates) {
+        if (rate == fps) {
+            return true;        // found it: stop looking
+        }
+    }
+    return false;               // checked every item, no match
+}
+```
+Python: `return fps in STANDARD_FRAME_RATES`. C++ spells the loop out, and that's fine: it's clear, and
+it's exactly what `in` does underneath.
 
 ### Your turn
-In `take_name.cpp`, write the body of **`is_take_extension(std::string_view ext)`**.
-Rules (also in the header): true only for `.fbx` or `.c3d`, ignoring upper and lower case. `"fbx"` without
-the dot is false. Delete the `(void)ext;` line once you use `ext`.
+All in `take_name.cpp`, inside the unnamed namespace that's already there:
+1. Add the includes you need at the top: `<array>` and `<string>` (`<cctype>` is already there).
+2. Create your constant list of take extensions, `.fbx` and `.c3d`, stored with the dot.
+3. Write a `to_lower_copy` helper (type it out yourself rather than pasting: that's how the syntax sticks).
+
+Then, below the unnamed namespace, write the body of **`is_take_extension(std::string_view ext)`**:
+lower-case `ext`, then loop over your list and return true on a match. Delete the `(void)ext;` line.
+`"fbx"` without the dot must be false, and it will be, because your list stores extensions with the dot.
 
 ### Run it
-`.\tools\run.ps1 01` → `[x] Step 2: is_take_extension    7/7`
+`[x] Step 2: is_take_extension    7/7`
+
+Then a quick experiment: add `".bvh"sv` to your list and run again. All 7 still pass (no test uses `.bvh`),
+and you've just added a supported format without touching the function. Remove it again before moving on.
 
 <details><summary>Stuck? Hint 1</summary>
 
-Both valid extensions are exactly 4 characters long. What can you rule out before looking at any letters?
+Do the lower-casing once, before the loop: `std::string lower = to_lower_copy(ext);`. Inside the loop,
+compare `lower` with each item in your list.
 </details>
 <details><summary>Hint 2</summary>
 
-Follow the `is_yes` shape: check the size, build a lower-case copy, compare the copy with `".fbx"` and `".c3d"`.
+A `std::string` and a `std::string_view` can be compared directly with `==`, so `lower == extension`
+works when `extension` comes from your `sv` list.
 </details>
+
+**What you'll see in other codebases:** the loop is often replaced by a library call,
+`std::ranges::find(kTakeExtensions, lower) != kTakeExtensions.end()` (from `<algorithm>`), which does the
+same search. Both are standard. Write the loop for now; you'll be able to read the shorter form when you meet it.
 
 ---
 
@@ -267,18 +336,28 @@ for failure. Only use `*a` after checking `if (a)`: reading an empty optional wi
 behaviour, meaning the program can do anything, including appearing to work.
 
 To turn digits into a number, use **`std::from_chars`** (from `<charconv>`). It's the C++ version of `int("42")`,
-but it doesn't throw. Instead it tells you what happened:
+but it doesn't throw. Instead it hands back a small result object that tells you what happened:
 ```cpp
 std::string_view digits = "042";
 int value = 0;
-auto [ptr, ec] = std::from_chars(digits.data(), digits.data() + digits.size(), value);
+
+const char* begin = digits.data();                  // pointer to the first character
+const char* end = digits.data() + digits.size();    // pointer to just past the last character
+
+std::from_chars_result result = std::from_chars(begin, end, value);
 ```
-- You give it the start and end of the characters (`.data()` is a pointer to the first character).
+- You give it where the characters start and end. A pointer (`const char*`) is a memory address; for now,
+  read it as "a position in the text".
 - It writes the number into `value`.
-- `auto [ptr, ec] = ...` unpacks the two results, like Python's `ptr, ec = f()`:
-  - `ec` is the error code. `ec == std::errc{}` means success. It fails on no digits, or a number too big for an `int`.
-  - `ptr` points to where it **stopped** reading. For `"12a"` it reads `12`, stops at `a`, and still says success!
-    So you must also check `ptr == digits.data() + digits.size()` ("did it read everything?").
+- `result` has two fields:
+  - `result.ec` — the error code. `result.ec == std::errc{}` means success. It fails on no digits, or a
+    number too big for an `int`.
+  - `result.ptr` — where it **stopped** reading. For `"12a"` it reads `12`, stops at `a`, and still reports
+    success! So also check `result.ptr == end` ("did it read every character?").
+
+You'll often see the shorter form `auto [ptr, ec] = std::from_chars(...);`, which unpacks the two fields
+into variables, like Python's `ptr, ec = f()`. It's the same thing; use the explicit version until it feels
+natural.
 
 ### Example
 Parse a frame rate like `"120fps"`:
@@ -288,16 +367,30 @@ Parse a frame rate like `"120fps"`:
 #include <string_view>
 
 std::optional<int> parse_fps(std::string_view text) {
+    // Rule 1: must end with "fps"
     if (!text.ends_with("fps")) {                       // C++20; there's also starts_with
         return std::nullopt;
     }
-    std::string_view digits = text.substr(0, text.size() - 3);   // drop "fps"
+
+    // Everything before "fps" should be the number
+    std::string_view digits = text.substr(0, text.size() - 3);
+
     int value = 0;
-    auto [ptr, ec] = std::from_chars(digits.data(), digits.data() + digits.size(), value);
-    if (ec != std::errc{} || ptr != digits.data() + digits.size()) {
-        return std::nullopt;                            // not a number, or junk after it
+    const char* begin = digits.data();
+    const char* end = digits.data() + digits.size();
+    std::from_chars_result result = std::from_chars(begin, end, value);
+
+    // Rule 2: it must be a number that fits in an int
+    if (result.ec != std::errc{}) {
+        return std::nullopt;
     }
-    return value;
+
+    // Rule 3: nothing may come after the digits ("12x" is not a number)
+    if (result.ptr != end) {
+        return std::nullopt;
+    }
+
+    return value;                                       // success: the optional now holds value
 }
 // parse_fps("120fps") -> 120     parse_fps("12xfps") -> nothing     parse_fps("fps") -> nothing
 ```
@@ -311,7 +404,8 @@ everything after it must be digits only, and the number must be 1 or more. `"T00
 
 <details><summary>Hint 1</summary>
 
-Check it starts with `'T'` (`token.starts_with('T')`), then take `token.substr(1)` as the digits and follow `parse_fps`.
+Check it starts with `'T'` (`token.starts_with('T')`), then take `token.substr(1)` as the digits and follow
+`parse_fps`, one rule per `if`.
 </details>
 <details><summary>Hint 2</summary>
 
@@ -323,12 +417,17 @@ Check it starts with `'T'` (`token.starts_with('T')`), then take `token.substr(1
 ## Step 5 — Putting it together: `parse_take_name` (30 min)
 
 ### Learn
-**Structs.** `TakeName` is a `struct`: a group of named fields, like a Python `@dataclass`. You can create
-one by listing the fields in order inside braces:
+**Structs.** `TakeName` is a `struct`: a group of named fields, like a Python `@dataclass`. The clearest way
+to build one is to create it empty and fill each field by name:
 ```cpp
-TakeName t{"BRAWL", 3, "JDoe", ".fbx", "D:/mocap/BRAWL_T003_JDoe.fbx"};
-t.shoot      // "BRAWL"
+TakeName t;                 // every field starts at its default ("" for strings, 0 for take)
+t.shoot = "BRAWL";
+t.take = 3;
+t.performer = "JDoe";
 ```
+There's also a short form that lists the fields in declaration order inside braces:
+`TakeName t{"BRAWL", 3, "JDoe", ".fbx", path};`. It's common, but it breaks silently if someone reorders
+the fields, so prefer naming each field while you learn.
 
 **Turning a view into owned text.** The struct's fields are `std::string` (the record must own its text,
 because it will outlive the filename it came from). A `string_view` doesn't turn into a `std::string` by
@@ -353,12 +452,22 @@ std::optional<Setting> parse_setting(std::string_view line) {
     if (eq == std::string_view::npos) {
         return std::nullopt;                          // no '='
     }
-    std::string_view key = line.substr(0, eq);
-    std::string_view value = line.substr(eq + 1);
-    if (key.empty() || value.empty()) {
-        return std::nullopt;
+
+    std::string_view key = line.substr(0, eq);        // everything before '='
+    std::string_view value = line.substr(eq + 1);     // everything after '='
+
+    if (key.empty()) {
+        return std::nullopt;                          // "=120"
     }
-    return Setting{std::string(key), std::string(value)};   // copy into owned strings once, at the end
+    if (value.empty()) {
+        return std::nullopt;                          // "fps="
+    }
+
+    // Every rule passed: copy the views into owned strings, once, at the end
+    Setting setting;
+    setting.key = std::string(key);
+    setting.value = std::string(value);
+    return setting;
 }
 ```
 
@@ -390,25 +499,46 @@ With positions `first` and `last` of the two underscores: shoot = `base.substr(0
 
 ### Learn
 A Python `@dataclass` gets `__eq__` for free, so two records with the same fields are equal. A C++ struct
-does **not** get `==` automatically: `a == b` won't compile. You ask for it with one line inside the struct:
+does **not** get `==` automatically: `a == b` won't compile. You have to define what `==` means.
+
+First, the long way, written out by hand, so you can see what's happening:
 ```cpp
 struct Vec3 {
-    float x, y, z;
-    bool operator==(const Vec3&) const = default;   // compare every field, in order
+    float x = 0;
+    float y = 0;
+    float z = 0;
+
+    bool operator==(const Vec3& other) const {
+        if (x != other.x) { return false; }
+        if (y != other.y) { return false; }
+        if (z != other.z) { return false; }
+        return true;                                 // every field matched
+    }
 };
 ```
-Reading that line left to right:
+Reading the first line of it left to right:
 - `bool operator==` — "I'm defining what `==` means for this type; it returns a bool."
-- `(const Vec3&)` — the other object, passed by **reference** (no copy) and **const** (we promise not to change it).
-- the `const` after the `)` — calling `==` doesn't change *this* object either.
-- `= default` — "compiler, write the obvious version: compare every field." C++20 then gives you `!=` for free too.
+- `(const Vec3& other)` — the object on the right of `==`, passed by **reference** (`&`, no copy) and
+  **const** (we promise not to change it). Python's equivalent is `def __eq__(self, other)`.
+- the `const` after the `)` — calling `==` doesn't change *this* object (the one on the left) either.
+- inside, `x` means this object's `x` (Python's `self.x`), and `other.x` is the other one's.
+
+Comparing every field in order is so common that C++20 can write that body for you:
+```cpp
+    bool operator==(const Vec3&) const = default;   // same as the hand-written version above
+```
+`= default` means "compiler, write the obvious version: compare every field, in order". You also get `!=`
+for free. Use the hand-written form when equality means something special (for example, two entities are
+equal when their IDs match, whatever their other fields). That's exactly what Lesson 03 needs.
 
 What the compiler *does* write for every struct without being asked: creating it, copying it, moving it,
 assigning it, destroying it. Not `==`. "What does the compiler generate for a class?" is a classic interview
 question.
 
 ### Your turn
-In **`take_name.h`**, replace the `// STEP 6` comment inside `TakeName` with the `operator==` line for `TakeName`.
+In **`take_name.h`**, replace the `// STEP 6` comment inside `TakeName` with an `operator==` for `TakeName`.
+Write the long version first (five fields), run it, then replace it with the `= default` line and run again.
+Both should pass: that proves they do the same thing.
 
 ### Run it
 `[x] Step 6: operator==    4/4`
@@ -483,5 +613,8 @@ Success, with value 12, and `ptr` pointing at `a`. You must also check that `ptr
 | `s.startswith("T")` | `s.starts_with('T')` (C++20) |
 | `int("42")` | `std::from_chars(...)` + check `ec` and `ptr` |
 | `None` | `std::nullopt` in a `std::optional<T>` |
+| `VALID_EXT = [".fbx", ".c3d"]` | `constexpr std::array kValidExt{".fbx"sv, ".c3d"sv};` |
+| `x in LIST` | a `for` loop over the array (or `std::ranges::find`) |
+| `_private_helper()` in a module | a function inside `namespace { }` in the `.cpp` |
 | `@dataclass` | `struct` + `bool operator==(const T&) const = default;` |
 | `f"{n:03}"` | `std::format("{:03}", n)` |
