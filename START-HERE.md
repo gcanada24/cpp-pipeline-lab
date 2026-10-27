@@ -43,6 +43,11 @@ Why not "run this file" like PyCharm? A C++ program has to be compiled and linke
 lesson's tests plus your `capture_core` code. So you run the *target* (`lesson01`), and the Run button builds
 whatever changed first.
 
+## Your reference notes
+Cheat sheets we build up as the course goes, in [`reference/`](reference/):
+- [Printing to the console](reference/printing.md): `std::cout`, `std::format`, printing `optional`s and
+  structs, tracing the flow through a function
+
 ## Where Claude fits
 The lesson file is complete on its own. Use chat when you want more:
 - **"check"** — I build your code and review it the way an interviewer would
