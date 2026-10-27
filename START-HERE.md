@@ -47,6 +47,8 @@ whatever changed first.
 Cheat sheets we build up as the course goes, in [`reference/`](reference/):
 - [Printing to the console](reference/printing.md): `std::cout`, `std::format`, printing `optional`s and
   structs, tracing the flow through a function
+- [Strings](reference/strings.md): owning vs viewing text, the lifetime rule, every `string_view` member next
+  to Python, and how to look things up on cppreference
 
 ## Where Claude fits
 The lesson file is complete on its own. Use chat when you want more:
