@@ -25,11 +25,21 @@ and signals.
 ## How a lesson works
 Every lesson is a folder `lessons/NN-name/` whose **`LESSON.md` is the complete lesson**: short steps, each
 with Learn (the idea next to the Python version) → Example (working code for a similar problem) → Your turn
-(one function, one file) → Run it (`.	oolsun.ps1 NN` shows progress per step). Hints are hidden in the
+(one function, one file) → Run it (`.\tools\run.ps1 NN` shows progress per step). Hints are hidden in the
 lesson; chat is for "check" (code review), extra explanations and interview quizzes. See
 [START-HERE.md](START-HERE.md).
 
 Each lesson is written in full before you start it. The tables below are the plan for the whole course.
+
+## Who writes the header
+Designing a type's public face is the real job, so you take it over gradually:
+
+| Lessons | Header |
+|---|---|
+| 01 | given to you; you write the function bodies |
+| 02–03 | a spec in comments; you write parts of the declarations from it |
+| 04–06 | a short spec; you write the whole header, and we review the design before you implement it |
+| 07+ | you design the interface yourself; we discuss it like a design review, then you build it |
 
 ## Lessons
 
@@ -37,10 +47,10 @@ Each lesson is written in full before you start it. The tables below are the pla
 | # | Capture++ piece | From the Python system | C++ concepts |
 |---|---|---|---|
 | 01 | `naming`: parse/format take filenames | naming / path helpers | header vs source, compile vs link, namespaces, `string_view`, `optional`, `from_chars`, `std::format`, `operator==` |
-| 02 | `Uuid`, `CircleStatus`, `Timecode` | `uuid4().int`, `CircleStatus(Enum)`, timecode strings, frames @120/60/30 | value types, `enum class`, operator overloading, `const`, `constexpr`, `<random>`, `std::hash` |
+| 02 | `Uuid`, `CircleStatus`, `Timecode` | `uuid4().int`, `CircleStatus(Enum)`, timecode strings, frames @120/60/30 | value types, `enum class` + `switch`, first `class` (private data, constructors, member init list), `const` member functions, operator overloading, `constexpr`, `static`, `<random>` |
 | 03 | `Entity` base class | `EntityBase`: uuid, name, note, `safely_deleted`, `_modified_properties` | `class` vs `struct`, access control, abstract classes, virtual destructor, getters/setters, change tracking |
 | 04 | Facility → Project → Day → Session → Shot → Take | `add_take()`, `parent_entity`, `get_parent_of_type()` | ownership: `unique_ptr` children + raw non-owning parent, shared Subjects, templates + `dynamic_cast` |
-| 05 | Traversal, lookup, sorting | `children_entity_bases`, `get_child_with_uuid`, `SortTypes` | recursion/visitors, `unordered_map` index, `std::sort` + lambdas, iterators |
+| 05 | Traversal, lookup, sorting | `children_entity_bases`, `get_child_with_uuid`, `SortTypes` | recursion/visitors, `unordered_map` index + `std::hash<Uuid>`, `operator<=>`, `std::sort` + lambdas, iterators |
 | 06 | Entities vs values | (Python never made you choose) | copy vs move, Rule of 0/3/5, `= delete`, identity vs value objects |
 
 ### Phase 2 — Making it a system

@@ -1,7 +1,8 @@
 # Start here
 
 ## Your current lesson
-**[Lesson 01 — Take names](lessons/01-take-names/LESSON.md)**: open that file and follow it top to bottom.
+**[Lesson 02 — Take details: status, timecode and IDs](lessons/02-take-details/LESSON.md)**: open that file and
+follow it top to bottom. Run it with `.\tools\run.ps1 02`, or pick **lesson02** in your IDE.
 
 ## How every lesson works
 Each lesson is one folder, `lessons/NN-name/`, and **its `LESSON.md` is the whole lesson**. It's split into
@@ -64,8 +65,8 @@ Full syllabus with the reasoning behind each lesson: [COURSE.md](COURSE.md).
 
 | # | Lesson | Status |
 |---|---|---|
-| 01 | Take names: headers, strings, `optional`, structs | **current** |
-| 02 | IDs, statuses and timecode: value types, `enum class`, operators | written when 01 is done |
+| 01 | Take names: headers, strings, `optional`, structs | done |
+| 02 | Take details: `enum class`, classes, `const`, operators, `<random>` | **current** |
 | 03 | The Entity base class: classes, `virtual`, abstract classes | |
 | 04 | The Facility → Take hierarchy: ownership, `unique_ptr` | |
 | 05 | Finding and sorting entities: recursion, maps, lambdas | |
