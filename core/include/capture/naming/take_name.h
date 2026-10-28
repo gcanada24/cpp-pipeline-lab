@@ -21,6 +21,7 @@ struct TakeName {
     std::string path;       // the full path exactly as given
 
     // STEP 6: add one line here so two TakeNames can be compared with ==
+    bool operator==(const TakeName&) const = default;
 };
 
 // STEP 2 — True if ext is ".fbx" or ".c3d", ignoring upper/lower case.
